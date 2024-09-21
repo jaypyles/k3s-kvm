@@ -57,9 +57,10 @@ Add your virtual machines to an `inventory.ini` file:
 
 ```bash
 [k3s_master]
-k3s_master ansible_host=192.168.x.x
+master ansible_host=192.168.x.x
+
 [k3s_workers]
-k3s_workers ansible_host=192.168.x.x
+worker-1 ansible_host=192.168.x.x
 
 [all:vars]
 ansible_user=user
