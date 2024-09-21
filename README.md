@@ -66,3 +66,15 @@ ansible_pass=root
 
 Run the playbook to install k3s on the virtual machines:
 `ansible-playbook -i inventory.ini playbooks/create_k3s_cluster.yml`
+
+## Remote Control of k3s cluster
+
+Copy over the k3s.yaml to the host you want to control from:
+
+`scp user@master_node:k3s.yaml ~/.kube/config`
+
+Then, edit the config file to point to the host you want to control:
+
+`vim ~/.kube/config`
+
+And then: `server: https://master_node:6443`
