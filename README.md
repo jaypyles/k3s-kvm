@@ -39,23 +39,28 @@ Create two virtual machines using either virt-install or virt-manager. These vir
 Assign your vms to a static address using netplan:
 
 ```bash
-# /etc/netplan/01-static-ip.yaml
+# /etc/network/interfaces
 
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    enp1s0:
-      addresses:
-        - 192.168.x.x/24   # Your static IP and subnet mask
-      gateway4: 192.168.x.x  # Your network gateway (adjust if necessary)
-      nameservers:
-        addresses:
-          - 8.8.8.8          # Primary DNS (Google DNS)
-          - 8.8.4.4          # Secondary DNS (Google DNS)
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto eth0
+iface eth0 inet manual
+
+auto brx
+iface brx inet static
+address 192.168.1.111
+netmask 255.255.255.0
+network 192.168.1.0
+broadcast 192.168.1.255
+gateway 192.168.1.254
+dns-nameservers 192.168.1.254 8.8.8.8
+bridge_ports eth0
 ```
 
-And then: `sudo netplan apply`
+And then: `sudo systemctl restart networking`
 
 Add your virtual machines to an `inventory.ini` file:
 
