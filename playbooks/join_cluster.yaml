@@ -1,0 +1,19 @@
+- name: Get join token from master
+  hosts: k3s_master
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Get k3s join token
+      ansible.builtin.command: "sudo cat /var/lib/rancher/k3s/server/node-token"
+      register: join_token
+
+- name: Join workers to the cluster
+  hosts: k3s_workers
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Join k3s cluster on worker node
+      ansible.builtin.shell: |
+        export URL="https://{{ hostvars['master']['ansible_host'] }}:6443"
+        export TOKEN="{{ hostvars['master']['join_token'].stdout }}"
+        curl -sfL https://get.k3s.io | K3S_URL=$URL K3S_TOKEN=$TOKEN sh -
