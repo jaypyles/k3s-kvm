@@ -3,7 +3,7 @@
 Install all pre-requisites for kvm to begin:
 `sudo apt install kvm`
 
-Assign your vms to a static address using netplan:
+Create a bridge network on the host:
 
 ```bash
 # /etc/network/interfaces
