@@ -39,6 +39,8 @@ Create two virtual machines using either virt-install or virt-manager. These vir
 Assign your vms to a static address using netplan:
 
 ```bash
+# /etc/netplan/01-static-ip.yaml
+
 network:
   version: 2
   renderer: networkd
@@ -52,6 +54,8 @@ network:
           - 8.8.8.8          # Primary DNS (Google DNS)
           - 8.8.4.4          # Secondary DNS (Google DNS)
 ```
+
+And then: `sudo netplan apply`
 
 Add your virtual machines to an `inventory.ini` file:
 
