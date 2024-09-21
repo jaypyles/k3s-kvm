@@ -16,8 +16,8 @@ iface lo inet loopback
 auto eth0
 iface eth0 inet manual
 
-auto brx
-iface brx inet static
+auto br0
+iface br0 inet static
 address 192.168.1.111
 netmask 255.255.255.0
 network 192.168.1.0
