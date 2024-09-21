@@ -1,0 +1,5 @@
+- name: Install k3s on master node
+  import: ./install_k3s.yml
+
+- name: Add workers to the cluster
+  import: ./create_k3s_cluster.yml

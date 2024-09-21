@@ -1,5 +1,8 @@
 # Creating a k3s cluster using KVM
 
+Install all pre-requisites for kvm to begin:
+`sudo apt install kvm`
+
 Create a bridge network on the host:
 
 ```bash
@@ -31,7 +34,9 @@ virsh net-start net
 virsh net-autostart net
 ```
 
-Assign your vm to a static address using netplan:
+Create two virtual machines using either virt-install or virt-manager. These virtual machines will be connected to the bridge network created above.
+
+Assign your vms to a static address using netplan:
 
 ```bash
 network:
@@ -47,3 +52,19 @@ network:
           - 8.8.8.8          # Primary DNS (Google DNS)
           - 8.8.4.4          # Secondary DNS (Google DNS)
 ```
+
+Add your virtual machines to an `inventory.ini` file:
+
+```bash
+[k3s_master]
+k3s_master ansible_host=192.168.x.x
+[k3s_workers]
+k3s_workers ansible_host=192.168.x.x
+
+[all:vars]
+ansible_user=user
+ansible_pass=root
+```
+
+Run the playbook to install k3s on the virtual machines:
+`ansible-playbook -i inventory.ini playbooks/create_k3s_cluster.yml`
