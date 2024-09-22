@@ -78,3 +78,7 @@ Then, edit the config file to point to the host you want to control:
 `vim ~/.kube/config`
 
 And then: `server: https://master_node:6443`
+
+### Set KVM vm's to restart on reboot (optional)
+
+`virsh autostart <vm_name>`
