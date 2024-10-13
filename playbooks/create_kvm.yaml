@@ -1,0 +1,61 @@
+---
+- name: Create KVM vm
+  hosts: servers
+  gather_facts: yes
+  become: yes
+  vars_files:
+    - ../vars/kvm.yml
+  tasks:
+    - name: KVM Provision role
+      include_role:
+        name: kvm_provision
+      vars:
+        vm_name: "{{ vm }}"
+        vm_vcpu: "{{ vcpu }}"
+        vm_memory: "{{ memory }}"
+        vm_network: "{{ network }}"
+        vm_root_pass: "{{ root_pass }}"
+        vm_ssh_key: "{{ user_ssh_key }}"
+        vm_bridge: "{{ bridge }}"
+        vm_user: "{{ user }}"
+        vm_ip: "{{ ip }}"
+        vm_gateway: "{{ gateway }}"
+        home_vm_disk_image: "{{ home_vm_image }}"
+        remote_vm_disk_image: "{{ remote_vm_image }}"
+
+    - name: Update inventory file
+      lineinfile:
+        path: "{{ playbook_dir }}/../inventory.ini"
+        line: "{{ vm }} ansible_host={{ ip }} ansible_user={{ user }}"
+        insertafter: "^\\[k3s_workers\\]"
+        regexp: "^{{ vm }} ansible_host=.*$"
+        state: present
+      delegate_to: localhost
+
+
+- name: Join new worker to k3s cluster
+  hosts: k3s_master
+  vars_files:
+    - ../vars/kvm.yml
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Ensure sshpass is installed on the master node
+      become: true
+      ansible.builtin.package:
+        name: sshpass
+        state: present
+
+    - name: Get k3s join token
+      ansible.builtin.command: "sudo cat /var/lib/rancher/k3s/server/node-token"
+      register: join_token
+
+    - name: Join k3s cluster on new worker node
+      ansible.builtin.shell: |
+        export URL="https://{{ ansible_host }}:6443"
+        export TOKEN="{{ join_token.stdout }}"
+        sshpass -p "{{ ssh_password }}" ssh -o StrictHostKeyChecking=no {{ user }}@{{ ip }} \
+          "curl -sfL https://get.k3s.io | K3S_URL=$URL K3S_TOKEN=$TOKEN sh -"
+      args:
+        executable: /bin/bash
+

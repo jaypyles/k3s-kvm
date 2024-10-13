@@ -1,2 +1,3 @@
 .vscode
 inventory.ini
+vars/kvm.yml

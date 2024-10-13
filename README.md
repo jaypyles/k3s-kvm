@@ -50,6 +50,22 @@ virsh net-autostart net
 
 Create two virtual machines using either virt-install or virt-manager. These virtual machines will be connected to the bridge network created above.
 
+The machines will need ip addresses set using netplan if using ubuntu-server.
+
+```bash
+# /etc/netplan/01-netcfg.yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    net:
+      addresses:
+        - 192.168.1.x/24
+      gateway4: 192.168.1.1
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
+```
+
 Add your virtual machines to an `inventory.ini` file:
 
 ```bash
@@ -62,6 +78,12 @@ worker-1 ansible_host=192.168.x.x
 [all:vars]
 ansible_user=user
 ansible_pass=root
+```
+
+Create a vars file for the kvm variables:
+
+```bash
+cp vars/kvm.template.yml vars/kvm.yml
 ```
 
 Run the playbook to install k3s on the virtual machines:

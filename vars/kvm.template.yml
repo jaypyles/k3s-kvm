@@ -1,0 +1,23 @@
+# disk images
+home_vm_image: <path to base image>
+remote_vm_image: /var/lib/libvirt/images/<vm name>-disk.qcow2
+
+# vm information
+vm: <vm name>
+memory: <memory>
+vcpu: <vcpu>
+disk_size: <disk size>
+
+# network information
+network: <network name>
+bridge: <bridge name>
+root_pass: <root password>
+user_ssh_key: <path to ssh key>
+
+# user information
+user: <user>
+ssh_password: <ssh password>
+
+# ip information
+ip: <ip address>
+gateway: <gateway>

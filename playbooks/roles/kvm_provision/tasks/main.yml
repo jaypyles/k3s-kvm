@@ -1,0 +1,89 @@
+---
+# tasks file for kvm_provision
+- name: Ensure lxml is installed
+  ansible.builtin.package:
+    name: python3-lxml
+    state: present
+  become: yes
+
+- name: Ensure genisoimage or mkisofs is installed
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - genisoimage
+    - mkisofs
+  ignore_errors: yes
+  become: yes
+
+- name: Get VMs list
+  community.libvirt.virt:
+    command: list_vms
+  register: existing_vms
+  changed_when: no
+
+- name: Create VM if not exists
+  block:
+    - name: Copy over disk image
+      ansible.builtin.copy:
+        src: "/home/jayden/k3s-base.qcow2"
+        dest: "{{ remote_vm_disk_image }}"
+        remote_src: no
+      become: yes
+      register: copy_results
+
+    - name: Configure the image
+      ansible.builtin.shell: |
+        virt-customize -a {{ remote_vm_disk_image }} \
+          --hostname {{ vm_name }} \
+          --root-password password:{{ vm_root_pass }} \
+          --ssh-inject 'root:file:{{ vm_ssh_key }}' \
+      when: copy_results.changed
+
+    - name: Create cloud-init directory
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user }}/cloud-init/cidata"
+        state: directory
+        mode: '0755'
+      become: no
+
+    - name: Create meta-data file
+      copy:
+        content: "instance-id: {{ vm_name }}\nlocal-hostname: {{ vm_name }}"
+        dest: "/home/{{ ansible_user }}/cloud-init/cidata/meta-data"
+        mode: '0644'
+      become: no
+
+    - name: Create network-config file
+      template:
+        src: cloud-init.yml.j2
+        dest: "/home/{{ ansible_user }}/cloud-init/cidata/user-data"
+        mode: '0644'
+      become: no
+
+    - name: Create cloud-init ISO
+      command: >
+        genisoimage -output /home/{{ ansible_user }}/cloud-init/{{ vm_name }}-cloud-init.iso
+        -volid cidata -joliet -rock /home/{{ ansible_user }}/cloud-init/cidata
+      become: no
+
+    - name: Define vm
+      community.libvirt.virt:
+        command: define
+        xml: "{{ lookup('template', 'k3s-node.xml.j2') }}"
+
+    - name: Start vm
+      community.libvirt.virt:
+        name: "{{ vm_name }}"
+        state: running
+  when: "vm_name not in existing_vms.list_vms"
+
+- name: Ensure VM is started
+  community.libvirt.virt:
+    name: "{{ vm_name }}"
+    state: running
+  register: vm_start_results
+  until: "vm_start_results is success"
+  retries: 5
+  delay: 2
+  register: vm_start_results
