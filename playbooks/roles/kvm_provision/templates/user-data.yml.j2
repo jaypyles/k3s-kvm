@@ -1,0 +1,11 @@
+#cloud-config
+users:
+  - name: ubuntu
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: users
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: "ubuntu"
+
+    ssh_authorized_keys:
+      - {{ vm_ssh_key }}    

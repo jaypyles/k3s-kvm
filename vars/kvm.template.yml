@@ -21,3 +21,6 @@ ssh_password: <ssh password>
 # ip information
 ip: <ip address>
 gateway: <gateway>
+
+# k3s information
+k3s_version: <k3s version>

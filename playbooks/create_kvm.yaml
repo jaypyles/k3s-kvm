@@ -1,8 +1,8 @@
 ---
 - name: Create KVM vm
   hosts: servers
-  gather_facts: yes
-  become: yes
+  gather_facts: true
+  become: true
   vars_files:
     - ../vars/kvm.yml
   tasks:
@@ -54,8 +54,8 @@
       ansible.builtin.shell: |
         export URL="https://{{ ansible_host }}:6443"
         export TOKEN="{{ join_token.stdout }}"
-        sshpass -p "{{ ssh_password }}" ssh -o StrictHostKeyChecking=no {{ user }}@{{ ip }} \
-          "curl -sfL https://get.k3s.io | K3S_URL=$URL K3S_TOKEN=$TOKEN sh -"
+        sshpass -p "{{ ssh_password }}" ssh -o StrictHostKeyChecking=no {{ ansible_user }}@{{ ip }} \
+          "curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} K3S_URL=$URL K3S_TOKEN=$TOKEN sh -"
       args:
         executable: /bin/bash
 

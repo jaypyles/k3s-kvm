@@ -4,7 +4,7 @@
   ansible.builtin.package:
     name: python3-lxml
     state: present
-  become: yes
+  become: true
 
 - name: Ensure genisoimage or mkisofs is installed
   ansible.builtin.package:
@@ -13,8 +13,8 @@
   loop:
     - genisoimage
     - mkisofs
-  ignore_errors: yes
-  become: yes
+  ignore_errors: true
+  become: true
 
 - name: Get VMs list
   community.libvirt.virt:
@@ -24,12 +24,12 @@
 
 - name: Create VM if not exists
   block:
-    - name: Copy over disk image
+    - name: Copy over disk image if not exists
       ansible.builtin.copy:
         src: "/home/jayden/k3s-base.qcow2"
         dest: "{{ remote_vm_disk_image }}"
         remote_src: no
-      become: yes
+      become: true
       register: copy_results
 
     - name: Configure the image
@@ -45,27 +45,34 @@
         path: "/home/{{ ansible_user }}/cloud-init/cidata"
         state: directory
         mode: '0755'
-      become: no
+      become: true
 
     - name: Create meta-data file
       copy:
         content: "instance-id: {{ vm_name }}\nlocal-hostname: {{ vm_name }}"
         dest: "/home/{{ ansible_user }}/cloud-init/cidata/meta-data"
         mode: '0644'
-      become: no
+      become: true
 
     - name: Create network-config file
       template:
-        src: cloud-init.yml.j2
+        src: network-config.yml.j2
+        dest: "/home/{{ ansible_user }}/cloud-init/cidata/network-config"
+        mode: '0644'
+      become: true
+
+    - name: Create user-data file
+      template:
+        src: user-data.yml.j2
         dest: "/home/{{ ansible_user }}/cloud-init/cidata/user-data"
         mode: '0644'
-      become: no
+      become: true
 
     - name: Create cloud-init ISO
       command: >
         genisoimage -output /home/{{ ansible_user }}/cloud-init/{{ vm_name }}-cloud-init.iso
         -volid cidata -joliet -rock /home/{{ ansible_user }}/cloud-init/cidata
-      become: no
+      become: true
 
     - name: Define vm
       community.libvirt.virt:
@@ -86,4 +93,3 @@
   until: "vm_start_results is success"
   retries: 5
   delay: 2
-  register: vm_start_results
